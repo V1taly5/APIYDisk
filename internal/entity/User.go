@@ -10,6 +10,5 @@ type UserRepository interface {
 	Find(chatID int) (bool, error)
 	Create(chat *User) error
 	Update(chat *User) error
-	GetUser(chatID int64) (User, error)
 	FindByChatID(chatID int) (User, error)
 }

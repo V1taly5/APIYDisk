@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/V1taly5/APIYDisk/internal/entity"
@@ -85,36 +84,4 @@ func (mongodb *userRepository) Update(user *entity.User) error {
 		return fmt.Errorf("%s: %w", op, err)
 	}
 	return nil
-}
-
-func (mongodb *userRepository) Find(chatID int) (bool, error) {
-	var result entity.User
-	ctx, cencel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cencel()
-	err := mongodb.collection.FindOne(ctx, bson.M{"chatid": chatID}).Decode(&result)
-	if err == mongo.ErrNoDocuments {
-		return false, nil
-	} else if err != nil {
-		log.Fatal(err)
-	}
-	return true, nil
-}
-
-func (mongodb *userRepository) GetUser(chatID int64) (entity.User, error) {
-	var result entity.User
-	find, err := mongodb.Find(int(chatID))
-	if err != nil {
-		return result, err
-	}
-	if find {
-		ctx, cencel := context.WithTimeout(context.Background(), 10*time.Second)
-		defer cencel()
-		err = mongodb.collection.FindOne(ctx, bson.M{"chatid": chatID}).Decode(&result)
-		if err != nil {
-			return result, err
-		}
-		return result, nil
-	} else {
-		return result, mongo.ErrNilDocument
-	}
 }

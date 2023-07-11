@@ -6,15 +6,14 @@ import (
 	"log"
 	"os"
 
-	"github.com/V1taly5/APIYDisk/internal/entity"
-	"github.com/V1taly5/APIYDisk/internal/infrastructure/repository"
+	mongo "github.com/V1taly5/APIYDisk/internal/infrastructure/repository/mongo"
 	"github.com/V1taly5/APIYDisk/internal/tgbot"
 )
 
 func main() {
 	// cfg := config.MustLoad("./config.env")
 
-	client, err := repository.InitDataLayer()
+	client, err := mongo.InitDataLayer()
 	if err != nil {
 		log.Fatal("failed to init storege", err)
 	}
@@ -25,7 +24,7 @@ func main() {
 
 	}
 
-	userRepository := repository.NewUserRepository(client)
+	userRepository := mongo.NewUserRepository(client)
 
 	// config, err := helper.LoadConfig(".")
 	// if err != nil {
@@ -33,18 +32,9 @@ func main() {
 	// }
 	var telegramBot tgbot.TelegramBot
 	telegramBot.Init(userRepository)
+
 	ctx, cancel := context.WithCancel(context.Background())
 	go telegramBot.ReceiveUpdates(ctx)
-
-	// var User entity.User
-	var User3 entity.User
-	// User.ChatID = 34242342
-	// User.YandexDiskToken = "y0_AgAAAAAWC_PqAADLWwAAAADlhx9_puyF720NQDaD8to781KL6yfqMhA"
-	// telegramBot.Repo.Create(&User)
-	User3, err = telegramBot.Repo.FindByChatID(34242342)
-	User3.State = ""
-	// fmt.Println(User3)
-	telegramBot.Repo.Update(&User3)
 
 	log.Println("Start listening for updates. Press enter to stop")
 	bufio.NewReader(os.Stdin).ReadBytes('\n')

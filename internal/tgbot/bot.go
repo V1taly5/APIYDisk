@@ -10,6 +10,7 @@ import (
 	"github.com/V1taly5/APIYDisk/internal/usecase"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/looplab/fsm"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 var ctx = context.Background()
@@ -140,7 +141,7 @@ func (telegramBot *TelegramBot) analyzeUpdate(update tgbotapi.Update, newFSM *fs
 
 func (telegramBot *TelegramBot) analyzeUser(update tgbotapi.Update) {
 	chatID := update.Message.Chat.ID
-	user, err := telegramBot.Repo.GetUser(chatID)
+	user, err := telegramBot.Repo.FindByChatID(int(chatID))
 	if err != nil {
 		msg := tgbotapi.NewMessage(chatID, "Произошла ошибка! Бот работает не правильно")
 		telegramBot.API.Send(msg)
@@ -153,12 +154,16 @@ func (telegramBot *TelegramBot) analyzeUser(update tgbotapi.Update) {
 }
 
 func (telegramBot *TelegramBot) findUser(chatID int) bool {
-	find, err := telegramBot.Repo.Find(chatID)
+	_, err := telegramBot.Repo.FindByChatID(chatID)
 	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return false
+		}
 		msg := tgbotapi.NewMessage(int64(chatID), "Произошла ошибка! Бот может работать не правильнго!")
 		telegramBot.API.Send(msg)
+		return false
 	}
-	return find
+	return true
 }
 
 // func StartTelegramBot(token string, debugMod bool, disk *repository.YandexDiskAPI) error {
