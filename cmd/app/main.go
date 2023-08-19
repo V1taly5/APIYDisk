@@ -8,6 +8,7 @@ import (
 
 	mongo "github.com/V1taly5/APIYDisk/internal/infrastructure/repository/mongo"
 	"github.com/V1taly5/APIYDisk/internal/tgbot"
+	"github.com/V1taly5/APIYDisk/internal/usecase"
 )
 
 func main() {
@@ -26,12 +27,14 @@ func main() {
 
 	userRepository := mongo.NewUserRepository(client)
 
+	userUseCase := usecase.NewUserUseCase(userRepository)
+
 	// config, err := helper.LoadConfig(".")
 	// if err != nil {
 	// 	log.Fatal("cannot load config:", err)
 	// }
 	var telegramBot tgbot.TelegramBot
-	telegramBot.Init(userRepository)
+	telegramBot.Init(userUseCase)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	go telegramBot.ReceiveUpdates(ctx)

@@ -1,5 +1,7 @@
 package entity
 
+import "context"
+
 type User struct {
 	ChatID          int
 	YandexDiskToken string
@@ -7,8 +9,11 @@ type User struct {
 }
 
 type UserRepository interface {
-	Find(chatID int) (bool, error)
-	Create(chat *User) error
-	Update(chat *User) error
-	FindByChatID(chatID int) (User, error)
+	Create(ctx context.Context, chat *User) error
+	Update(ctx context.Context, chat *User) error
+	FindByChatID(ctx context.Context, chatID int) (User, error)
+}
+
+type UserUseCase interface {
+	CreateUser(ctx context.Context, chatID int) error
 }

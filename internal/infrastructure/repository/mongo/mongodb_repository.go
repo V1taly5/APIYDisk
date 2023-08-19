@@ -37,16 +37,13 @@ func NewUserRepository(client *mongo.Client) entity.UserRepository {
 	return &userRepository{collection: db}
 }
 
-func (mongo *userRepository) FindByChatID(chatID int) (entity.User, error) {
-	return mongo.findOneByQuery(bson.M{"chatid": chatID})
+func (mongo *userRepository) FindByChatID(ctx context.Context, chatID int) (entity.User, error) {
+	return mongo.findOneByQuery(ctx, bson.M{"chatid": chatID})
 }
 
-func (mongodb *userRepository) findOneByQuery(query interface{}) (entity.User, error) {
+func (mongodb *userRepository) findOneByQuery(ctx context.Context, query interface{}) (entity.User, error) {
 	const op = "infrastructure.reposotory.mongodb_repository.findOneByQuery"
 	var result entity.User
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
 
 	err := mongodb.collection.FindOne(ctx, query).Decode(&result)
 	if err != nil {
@@ -56,13 +53,11 @@ func (mongodb *userRepository) findOneByQuery(query interface{}) (entity.User, e
 		return result, err
 	}
 
-	return result, err
+	return result, nil
 }
 
-func (repo *userRepository) Create(user *entity.User) error {
+func (repo *userRepository) Create(ctx context.Context, user *entity.User) error {
 	const op = "infrastructure.reposotory.mongodb_repository.Create"
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
 
 	_, err := repo.collection.InsertOne(ctx, user)
 	if err != nil {
@@ -71,10 +66,8 @@ func (repo *userRepository) Create(user *entity.User) error {
 	return nil
 }
 
-func (mongodb *userRepository) Update(user *entity.User) error {
+func (mongodb *userRepository) Update(ctx context.Context, user *entity.User) error {
 	const op = "infrastructure.reposotory.mongodb_repository.Update"
-	ctx, cencel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cencel()
 
 	filter := bson.D{{Key: "chatid", Value: user.ChatID}}
 	update := bson.D{{Key: "$set", Value: user}}

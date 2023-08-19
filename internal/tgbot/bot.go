@@ -10,7 +10,6 @@ import (
 	"github.com/V1taly5/APIYDisk/internal/usecase"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/looplab/fsm"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 var ctx = context.Background()
@@ -31,11 +30,11 @@ var numericKeyboard = tgbotapi.NewInlineKeyboardMarkup(
 type TelegramBot struct {
 	API     *tgbotapi.BotAPI
 	Updates tgbotapi.UpdatesChannel
-	Repo    entity.UserRepository
+	UseCase entity.UserUseCase
 	State   *fsm.FSM
 }
 
-func (telegramBot *TelegramBot) Init(repo entity.UserRepository) {
+func (telegramBot *TelegramBot) Init(useCase entity.UserUseCase) {
 	botAPI, err := tgbotapi.NewBotAPI(TG_Bot_Token)
 	if err != nil {
 		log.Fatal(err)
@@ -48,7 +47,7 @@ func (telegramBot *TelegramBot) Init(repo entity.UserRepository) {
 
 	telegramBot.Updates = botUpdates
 
-	telegramBot.Repo = repo
+	telegramBot.UseCase = useCase
 
 }
 
@@ -92,14 +91,14 @@ func (telegramBot *TelegramBot) analyzeUpdate(update tgbotapi.Update, newFSM *fs
 	// TODO
 	chatID := update.Message.Chat.ID
 
-	if telegramBot.findUser(int(chatID)) {
-		telegramBot.analyzeUser(update)
-		// user exists
-	} else {
-		// message from new user
-		msg := tgbotapi.NewMessage(chatID, "Пожалуйста зарегестрируйтесь!")
-		telegramBot.API.Send(msg)
-	}
+	// if telegramBot.findUser(int(chatID)) {
+	// 	telegramBot.analyzeUser(update)
+	// 	// user exists
+	// } else {
+	// 	// message from new user
+	// 	msg := tgbotapi.NewMessage(chatID, "Пожалуйста зарегестрируйтесь!")
+	// 	telegramBot.API.Send(msg)
+	// }
 	if update.Message.IsCommand() {
 		telegramBot.handleCommand(int(chatID), update)
 	} else if update.Message.Document != nil {
@@ -139,32 +138,32 @@ func (telegramBot *TelegramBot) analyzeUpdate(update tgbotapi.Update, newFSM *fs
 	// }
 }
 
-func (telegramBot *TelegramBot) analyzeUser(update tgbotapi.Update) {
-	chatID := update.Message.Chat.ID
-	user, err := telegramBot.Repo.FindByChatID(int(chatID))
-	if err != nil {
-		msg := tgbotapi.NewMessage(chatID, "Произошла ошибка! Бот работает не правильно")
-		telegramBot.API.Send(msg)
-		return
-	}
-	telegramBot.State.SetState(user.State)
-	telegramBot.State.Event(ctx, "cancel")
-	fmt.Println(telegramBot.State.Current())
-	// TODO analyxeDate
-}
+// func (telegramBot *TelegramBot) analyzeUser(update tgbotapi.Update) {
+// 	chatID := update.Message.Chat.ID
+// 	user, err := telegramBot.Repo.FindByChatID(int(chatID))
+// 	if err != nil {
+// 		msg := tgbotapi.NewMessage(chatID, "Произошла ошибка! Бот работает не правильно")
+// 		telegramBot.API.Send(msg)
+// 		return
+// 	}
+// 	telegramBot.State.SetState(user.State)
+// 	telegramBot.State.Event(ctx, "cancel")
+// 	fmt.Println(telegramBot.State.Current())
+// 	// TODO analyxeDate
+// }
 
-func (telegramBot *TelegramBot) findUser(chatID int) bool {
-	_, err := telegramBot.Repo.FindByChatID(chatID)
-	if err != nil {
-		if err == mongo.ErrNoDocuments {
-			return false
-		}
-		msg := tgbotapi.NewMessage(int64(chatID), "Произошла ошибка! Бот может работать не правильнго!")
-		telegramBot.API.Send(msg)
-		return false
-	}
-	return true
-}
+// func (telegramBot *TelegramBot) findUser(chatID int) bool {
+// 	_, err := telegramBot.Repo.FindByChatID(chatID)
+// 	if err != nil {
+// 		if err == mongo.ErrNoDocuments {
+// 			return false
+// 		}
+// 		msg := tgbotapi.NewMessage(int64(chatID), "Произошла ошибка! Бот может работать не правильнго!")
+// 		telegramBot.API.Send(msg)
+// 		return false
+// 	}
+// 	return true
+// }
 
 // func StartTelegramBot(token string, debugMod bool, disk *repository.YandexDiskAPI) error {
 // 	bot, err := tgbotapi.NewBotAPI(token)
